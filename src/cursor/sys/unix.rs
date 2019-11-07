@@ -3,6 +3,7 @@ use std::{
     time::Duration,
 };
 
+use crate::input::{enqueue_internal, poll_internal, read_internal};
 use crate::{
     input::events::InternalEvent,
     utils::{
@@ -10,7 +11,6 @@ use crate::{
         Result,
     },
 };
-use crate::input::{read_internal, enqueue_internal, poll_internal};
 
 /// Returns the cursor position (column, row).
 ///
