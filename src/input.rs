@@ -23,10 +23,10 @@ use crate::{Command, Result};
 
 mod ansi;
 mod poll;
-mod timeout;
 mod reader;
 mod source;
 mod sys;
+mod timeout;
 
 lazy_static! {
     /// Static instance of `EventReader`.

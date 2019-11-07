@@ -5,9 +5,9 @@ use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
 use crate::Result;
 
 use super::super::{
-    timeout::PollTimeout,
     source::EventSource,
     sys::unix::{parse_event, tty_fd, FileDesc},
+    timeout::PollTimeout,
     InternalEvent,
 };
 

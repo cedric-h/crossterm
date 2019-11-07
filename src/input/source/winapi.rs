@@ -3,9 +3,9 @@ use std::{thread, time::Duration};
 use crossterm_winapi::{Console, Handle, InputEventType, KeyEventRecord, MouseEvent};
 
 use super::super::{
-    timeout::PollTimeout,
     source::EventSource,
     sys::winapi::{handle_key_event, handle_mouse_event},
+    timeout::PollTimeout,
     InternalEvent, Result,
 };
 
