@@ -4,12 +4,13 @@ use std::{
 };
 
 use crate::{
-    input::{events::InternalEvent, pool::EventPool},
+    input::events::InternalEvent,
     utils::{
         sys::unix::{disable_raw_mode, enable_raw_mode, is_raw_mode_enabled},
         Result,
     },
 };
+use crate::input::{read_internal, enqueue_internal, poll_internal};
 
 /// Returns the cursor position (column, row).
 ///
@@ -38,19 +39,17 @@ fn read_position_raw() -> Result<(u16, u16)> {
     stdout.flush()?;
 
     // acquire mutable lock until we read the position, so that the user can't steal it from us.
-    let mut lock = EventPool::get_mut();
-    let pool = lock.pool();
 
     loop {
-        match pool.poll_internal(Some(Duration::from_millis(2000))) {
+        match poll_internal(Some(Duration::from_millis(2000))) {
             Ok(true) => {
-                match pool.read_internal() {
+                match read_internal() {
                     Ok(InternalEvent::CursorPosition(x, y)) => {
                         return Ok((x, y));
                     }
                     Ok(event) => {
                         // We don't want to steal user events.
-                        pool.enqueue_internal(event);
+                        enqueue_internal(event);
                     }
                     _ => {}
                 };
