@@ -50,10 +50,10 @@ impl TtyInternalEventSource {
 
 impl EventSource for TtyInternalEventSource {
     fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<InternalEvent>> {
-        let mut timer = PollTimeout::new(timeout);
+        let mut timeout = PollTimeout::new(timeout);
 
         loop {
-            match self.poll.poll(&mut self.events, timer.left_over())? {
+            match self.poll.poll(&mut self.events, timeout.left_over())? {
                 event_count if event_count > 0 => {
                     self.buffer.push(self.tty_fd.read_byte()?);
 
@@ -79,7 +79,7 @@ impl EventSource for TtyInternalEventSource {
                 _ => return Ok(None),
             };
 
-            if timer.elapsed() {
+            if timeout.elapsed() {
                 return Ok(None);
             }
         }

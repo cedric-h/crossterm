@@ -303,10 +303,8 @@ mod tests {
     };
 
     use crate::input::{
-        events::{Event, InternalEvent},
-        pool::EventPool,
-        source::fake::FakeEventSource,
-        KeyEvent,
+        poll, poll_internal, read, read_internal, source::fake::FakeEventSource, swap_event_source,
+        Event, InternalEvent, KeyEvent,
     };
 
     #[test]
@@ -374,12 +372,11 @@ mod tests {
         let (poll_result, read) = poll.handle.join().unwrap();
 
         assert_eq!(poll_result, false);
-        assert_eq!(Some(InternalEvent::Event(read.unwrap())), None);
+        assert_eq!(read, None);
     }
 
     #[test]
     fn test_poll_without_timeout_should_return() {
-        // spin up a thread waiting 2 seconds for input.
         let poll = event_polling_thread(None);
 
         poll.event_sender.send(test_internal_key()).unwrap();
@@ -393,6 +390,30 @@ mod tests {
         );
     }
 
+    #[test]
+    #[cfg(unix)]
+    fn test_event_should_not_thrown_away() {
+        // first sent cursor position event, and try to poll with `EventReader`
+        let poll = event_polling_thread(Some(Duration::from_millis(500)));
+
+        poll.event_sender
+            .send(InternalEvent::CursorPosition(5, 5))
+            .unwrap();
+
+        let (poll_result, read) = poll.handle.join().unwrap();
+
+        assert_eq!(poll_result, false);
+        assert_eq!(read, None);
+
+        // Then try to read with `InternalEventReader`, the cursor position event should still be in cache.
+        let internal_poll = internal_event_polling_thread(Some(Duration::from_millis(500)));
+
+        let (poll_result, read) = internal_poll.handle.join().unwrap();
+
+        assert_eq!(poll_result, true);
+        assert_eq!(read, Some(InternalEvent::CursorPosition(5, 5)));
+    }
+
     /// Returns the handle to the thread that polls for input as long as the given duration and the sender to trigger the the thread to read the event.
     fn internal_event_polling_thread(
         timeout: Option<Duration>,
@@ -400,14 +421,12 @@ mod tests {
         let (event_sender, event_receiver) = channel();
 
         let handle = thread::spawn(move || {
-            let mut lock = EventPool::get_mut();
-            let pool = lock.pool();
-            pool.swap_event_source(Box::from(FakeEventSource::new(event_receiver)));
+            swap_event_source(Box::from(FakeEventSource::new(event_receiver)));
 
-            let poll_result = pool.poll_internal(timeout).unwrap();
+            let poll_result = poll_internal(timeout).unwrap();
 
             let read = if poll_result {
-                Some(pool.read_internal().unwrap())
+                Some(read_internal().unwrap())
             } else {
                 None
             };
@@ -425,15 +444,12 @@ mod tests {
         let (event_sender, event_receiver) = channel();
 
         let handle = thread::spawn(move || {
-            let mut lock = EventPool::get_mut();
-            let pool = lock.pool();
-            println!("set source");
-            pool.swap_event_source(Box::from(FakeEventSource::new(event_receiver)));
+            swap_event_source(Box::from(FakeEventSource::new(event_receiver)));
 
-            let poll_result = pool.poll(timeout).unwrap();
+            let poll_result = poll(timeout).unwrap();
 
             let read = if poll_result {
-                Some(pool.read().unwrap())
+                Some(read().unwrap())
             } else {
                 None
             };

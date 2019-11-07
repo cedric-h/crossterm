@@ -44,6 +44,7 @@ mod tests {
 
     use crate::input::poll_timeout::PollTimeout;
 
+    #[test]
     pub fn test_timer_without_duration_should_have_no_left_over() {
         let timer = PollTimeout::new(None);
         assert_eq!(timer.left_over(), None)

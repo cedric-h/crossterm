@@ -5,11 +5,8 @@ use super::source::tty::TtyInternalEventSource;
 #[cfg(windows)]
 use super::source::winapi::WinApiEventSource;
 use super::{
-    Result,
-    {
-        poll::EventPoll, poll_internal, poll_timeout::PollTimeout, read_internal,
-        source::EventSource, Event, InternalEvent,
-    },
+    poll::EventPoll, poll_internal, poll_timeout::PollTimeout, read_internal, source::EventSource,
+    Event, InternalEvent, Result,
 };
 
 /// Can be used to read `InternalEvent`s.

@@ -3,13 +3,10 @@ use std::{thread, time::Duration};
 use crossterm_winapi::{Console, Handle, InputEventType, KeyEventRecord, MouseEvent};
 
 use super::super::{
-    Result,
-    {
-        poll_timeout::PollTimeout,
-        source::EventSource,
-        sys::winapi::{handle_key_event, handle_mouse_event},
-        InternalEvent,
-    },
+    poll_timeout::PollTimeout,
+    source::EventSource,
+    sys::winapi::{handle_key_event, handle_mouse_event},
+    InternalEvent, Result,
 };
 
 pub(crate) struct WinApiEventSource;
@@ -22,7 +19,7 @@ impl WinApiEventSource {
 
 impl EventSource for WinApiEventSource {
     fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<InternalEvent>> {
-        let mut timer = PollTimeout::new(timeout);
+        let mut timeout = PollTimeout::new(timeout);
 
         loop {
             let number_of_events =
@@ -51,7 +48,7 @@ impl EventSource for WinApiEventSource {
                 }
             }
 
-            if timer.elapsed() {
+            if timeout.elapsed() {
                 return Ok(None);
             }
 
