@@ -122,5 +122,6 @@ pub enum InternalEvent {
     /// An input event.
     Event(Event),
     /// A cursor position (`col`, `row`).
+    #[cfg(unix)]
     CursorPosition(u16, u16),
 }

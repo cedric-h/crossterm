@@ -5,7 +5,7 @@ use crossterm_winapi::{Console, Handle, InputEventType, KeyEventRecord, MouseEve
 use crate::{
     input::{
         events::InternalEvent,
-        poll_timer::PollTimer,
+        poll_timeout::PollTimeout,
         source::EventSource,
         sys::winapi::{handle_key_event, handle_mouse_event},
     },
@@ -22,7 +22,7 @@ impl WinApiEventSource {
 
 impl EventSource for WinApiEventSource {
     fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<InternalEvent>> {
-        let mut timer = PollTimer::new(timeout);
+        let mut timer = PollTimeout::new(timeout);
 
         loop {
             let number_of_events =

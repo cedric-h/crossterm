@@ -6,7 +6,7 @@ use crate::Result;
 
 use super::super::{
     events::InternalEvent,
-    poll_timer::PollTimer,
+    poll_timeout::PollTimeout,
     source::EventSource,
     sys::unix::{parse_event, tty_fd, FileDesc},
 };
@@ -50,7 +50,7 @@ impl TtyInternalEventSource {
 
 impl EventSource for TtyInternalEventSource {
     fn try_read(&mut self, timeout: Option<Duration>) -> Result<Option<InternalEvent>> {
-        let mut timer = PollTimer::new(timeout);
+        let mut timer = PollTimeout::new(timeout);
 
         loop {
             match self.poll.poll(&mut self.events, timer.left_over())? {
