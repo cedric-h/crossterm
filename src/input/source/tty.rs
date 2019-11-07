@@ -2,15 +2,13 @@ use std::time::Duration;
 
 use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
 
-use crate::{
-    input::{
-        events::InternalEvent,
-        poll::EventPoll,
-        poll_timer::PollTimer,
-        sys::unix::{parse_event, tty_fd, FileDesc},
-        EventSource,
-    },
-    Result,
+use crate::Result;
+
+use super::super::{
+    events::InternalEvent,
+    poll_timer::PollTimer,
+    source::EventSource,
+    sys::unix::{parse_event, tty_fd, FileDesc},
 };
 
 // Tokens to identify file descriptor
@@ -28,7 +26,7 @@ impl TtyInternalEventSource {
         Ok(TtyInternalEventSource::from_file_descriptor(tty_fd()?))
     }
 
-    pub(crate) fn from_file_descriptor(tty_fd: FileDesc) -> TtyInternalEventSource {
+    pub(crate) fn from_file_descriptor(input_fd: FileDesc) -> TtyInternalEventSource {
         let buffer = Vec::new();
 
         // Get raw file descriptors for
@@ -38,14 +36,13 @@ impl TtyInternalEventSource {
         let tty_ev = EventedFd(&tty_raw_fd);
 
         let poll = Poll::new().unwrap();
-
         poll.register(&tty_ev, TTY_TOKEN, Ready::readable(), PollOpt::level())
             .unwrap();
 
         TtyInternalEventSource {
             buffer,
             poll,
-            tty_fd,
+            tty_fd: input_fd,
             events: Events::with_capacity(2),
         }
     }
@@ -56,15 +53,14 @@ impl EventSource for TtyInternalEventSource {
         let mut timer = PollTimer::new(timeout);
 
         loop {
-            let poll = |e: &mut Events, timeout: Option<Duration>| {
-                self.poll.poll(events, timeout).map(|x| x > 0)?
-            };
-
-            match poll(&mut self.events, timer.left_over())? {
-                true => {
+            match self.poll.poll(&mut self.events, timer.left_over())? {
+                event_count if event_count > 0 => {
                     self.buffer.push(self.tty_fd.read_byte()?);
 
-                    let input_available = poll(&mut self.events, Some(Duration::from_secs(0)));
+                    let input_available = self
+                        .poll
+                        .poll(&mut self.events, Some(Duration::from_secs(0)))
+                        .map(|x| x > 0)?;
 
                     match parse_event(&self.buffer, input_available) {
                         Ok(None) => {
@@ -80,12 +76,10 @@ impl EventSource for TtyInternalEventSource {
                         }
                     };
                 }
-                false => {
-                    return Ok(None);
-                }
+                _ => return Ok(None),
             };
 
-            if timeout.elapsed() {
+            if timer.elapsed() {
                 return Ok(None);
             }
         }

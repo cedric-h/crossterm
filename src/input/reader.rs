@@ -146,7 +146,8 @@ mod tests {
 
     use crate::input::{
         events::InternalEvent,
-        poll::{EventPoll, InternalEventReader},
+        poll::EventPoll,
+        reader::InternalEventReader,
         source::fake::FakeEventSource,
         Event, KeyEvent,
     };
