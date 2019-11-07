@@ -4,9 +4,9 @@ use crossterm_winapi::{Console, Handle, InputEventType, KeyEventRecord, MouseEve
 
 use crate::{
     input::{
-        event_source::EventSource,
         events::InternalEvent,
         poll_timer::PollTimer,
+        source::EventSource,
         sys::winapi::{handle_key_event, handle_mouse_event},
     },
     Result,
@@ -47,7 +47,7 @@ impl EventSource for WinApiEventSource {
 
                 match event {
                     None => return Ok(None),
-                    Some(event) => return Ok(Some(InternalEvent::Input(event))),
+                    Some(event) => return Ok(Some(InternalEvent::Event(event))),
                 }
             }
 

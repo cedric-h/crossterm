@@ -4,8 +4,8 @@ use mio::{unix::EventedFd, Events, Poll, PollOpt, Ready, Token};
 
 use crate::{
     input::{
-        event_poll::EventPoll,
         events::InternalEvent,
+        poll::EventPoll,
         poll_timer::PollTimer,
         sys::unix::{parse_event, tty_fd, FileDesc},
         EventSource,
@@ -28,7 +28,7 @@ impl TtyInternalEventSource {
         Ok(TtyInternalEventSource::from_file_descriptor(tty_fd()?))
     }
 
-    pub(crate) fn from_file_descriptor(input_fd: FileDesc) -> TtyInternalEventSource {
+    pub(crate) fn from_file_descriptor(tty_fd: FileDesc) -> TtyInternalEventSource {
         let buffer = Vec::new();
 
         // Get raw file descriptors for
@@ -38,6 +38,7 @@ impl TtyInternalEventSource {
         let tty_ev = EventedFd(&tty_raw_fd);
 
         let poll = Poll::new().unwrap();
+
         poll.register(&tty_ev, TTY_TOKEN, Ready::readable(), PollOpt::level())
             .unwrap();
 
@@ -84,7 +85,9 @@ impl EventSource for TtyInternalEventSource {
                 }
             };
 
-            timer.elapsed();
+            if timeout.elapsed() {
+                return Ok(None);
+            }
         }
     }
 }

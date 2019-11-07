@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::{
-    input::{event_source::EventSource, events::InternalEvent},
+    input::{events::InternalEvent, source::EventSource},
     Result,
 };
 

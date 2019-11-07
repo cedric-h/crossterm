@@ -7,10 +7,10 @@ use lazy_static::lazy_static;
 
 use crate::{
     input::{
-        event_poll::EventPoll,
-        event_reader::{EventReader, InternalEventReader},
-        event_source::EventSource,
         events::InternalEvent,
+        poll::EventPoll,
+        reader::{EventReader, InternalEventReader},
+        source::EventSource,
         Event,
     },
     Result,

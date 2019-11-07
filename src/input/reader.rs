@@ -1,13 +1,12 @@
 use std::{collections::vec_deque::VecDeque, time::Duration};
 
 #[cfg(unix)]
-use crate::input::event_source::tty::TtyInternalEventSource;
+use crate::input::source::tty::TtyInternalEventSource;
 #[cfg(windows)]
-use crate::input::event_source::winapi::WinApiEventSource;
+use crate::input::source::winapi::WinApiEventSource;
 use crate::{
     input::{
-        event_poll::EventPoll, event_source::EventSource, events::InternalEvent,
-        poll_timer::PollTimer, Event,
+        events::InternalEvent, poll::EventPoll, poll_timer::PollTimer, source::EventSource, Event,
     },
     Result,
 };
@@ -104,7 +103,7 @@ impl EventPoll for EventReader {
             match self.internal_poll.poll(timer.left_over())? {
                 true => {
                     match self.internal_poll.read()? {
-                        InternalEvent::Input(ev) => {
+                        InternalEvent::Event(ev) => {
                             self.events.push_back(ev);
                             return Ok(true);
                         }
@@ -119,7 +118,9 @@ impl EventPoll for EventReader {
                 }
             };
 
-            timer.elapsed();
+            if timer.elapsed() {
+                return Ok(false);
+            }
         }
     }
 
@@ -144,10 +145,10 @@ mod tests {
     };
 
     use crate::input::{
-        event_poll::{EventPoll, InternalEventReader},
-        event_source::fake::FakeEventSource,
         events::InternalEvent,
-        Event,
+        poll::{EventPoll, InternalEventReader},
+        source::fake::FakeEventSource,
+        Event, KeyEvent,
     };
 
     #[test]
@@ -158,14 +159,12 @@ mod tests {
         // wait half a second and sent the event
         thread::sleep(Duration::from_millis(500));
 
-        poll.event_sender
-            .send(InternalEvent::Input(Event::Unknown))
-            .unwrap();
+        poll.event_sender.send(test_key()).unwrap();
 
         let (poll_result, read) = poll.handle.join().unwrap();
 
         assert_eq!(poll_result, true);
-        assert_eq!(read, Some(InternalEvent::Input(Event::Unknown)));
+        assert_eq!(read, Some(test_key()));
     }
 
     #[test]
@@ -190,14 +189,16 @@ mod tests {
         // wait 1.5 seconds and then sent the event
         thread::sleep(Duration::from_millis(500));
 
-        poll.event_sender
-            .send(InternalEvent::Input(Event::Unknown))
-            .unwrap();
+        poll.event_sender.send(test_key()).unwrap();
 
         let (poll_result, read) = poll.handle.join().unwrap();
 
         assert_eq!(poll_result, true);
-        assert_eq!(read, Some(InternalEvent::Input(Event::Unknown)));
+        assert_eq!(read, Some(test_key()));
+    }
+
+    fn test_key() -> InternalEvent {
+        InternalEvent::Event(Event::Key(KeyEvent::Char('q')))
     }
 
     /// Returns the handle to the thread that polls for input as long as the given duration and the sender to trigger the the thread to read the event.
@@ -208,7 +209,7 @@ mod tests {
         reader.swap_event_source(Box::from(FakeEventSource::new(event_receiver)));
 
         let handle = thread::spawn(move || {
-            let poll_result = reader.poll(Some(Duration::from_millis(2000))).unwrap();
+            let poll_result = reader.poll(timeout).unwrap();
 
             let read = if poll_result {
                 Some(reader.read().unwrap())

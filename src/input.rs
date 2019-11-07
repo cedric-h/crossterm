@@ -35,22 +35,21 @@
 
 use std::time::Duration;
 
-use crate::{input::event_pool::EventPool, Command, Result};
-
 pub use self::{
-    event_source::{fake::FakeEventSource, EventSource},
     events::{Event, KeyEvent, MouseButton, MouseEvent},
+    source::{fake::FakeEventSource, EventSource},
 };
+use crate::{Command, Result};
 
 mod ansi;
-mod event_poll;
-mod event_reader;
-mod event_source;
 mod sys;
 
-pub(crate) mod event_pool;
 pub(crate) mod events;
+pub(crate) mod poll;
 pub(crate) mod poll_timer;
+pub(crate) mod pool;
+pub(crate) mod reader;
+pub(crate) mod source;
 
 /// Polls during an given duration for ready events.
 ///
@@ -79,7 +78,7 @@ pub(crate) mod poll_timer;
 /// }
 /// ```
 pub fn poll(timeout: Option<Duration>) -> Result<bool> {
-    let mut lock = EventPool::get_mut();
+    let mut lock = pool::EventPool::get_mut();
     lock.pool().poll(timeout)
 }
 
@@ -97,7 +96,7 @@ pub fn poll(timeout: Option<Duration>) -> Result<bool> {
 ///     if poll(Some(Duration::from_millis(1000)))? {
 ///         // read the ready event.
 ///         match read() {
-///             Ok(Event(event)) => { println!("{:?}", event) }
+///             Ok(event) => { println!("{:?}", event) }
 ///             _ => { }
 ///         }
 ///      }
@@ -105,7 +104,7 @@ pub fn poll(timeout: Option<Duration>) -> Result<bool> {
 /// }
 /// ```
 pub fn read() -> Result<Event> {
-    let mut lock = EventPool::get_mut();
+    let mut lock = pool::EventPool::get_mut();
     lock.pool().read()
 }
 
@@ -114,7 +113,7 @@ pub fn read() -> Result<Event> {
 /// This might be usefull for testing.
 /// See [FakeEventSource](LINK) for more information.
 pub fn swap_event_source(new: Box<dyn EventSource>) {
-    let mut lock = EventPool::get_mut();
+    let mut lock = pool::EventPool::get_mut();
     lock.pool().swap_event_source(new);
 }
 
@@ -152,20 +151,5 @@ impl Command for DisableMouseCapture {
     #[cfg(windows)]
     fn execute_winapi(&self) -> Result<()> {
         sys::winapi::disable_mouse_capture()
-    }
-}
-
-/// Stops the reading thread.
-///
-/// # Notes
-///
-/// This function is a no-op on the Windows platform.
-///
-/// When you call this function on the UNIX platform, all event channel senders
-/// are dropped and as a consequence you have to drop all `SyncReader`/`AsyncReader` readers.
-pub fn stop_reading_thread() {
-    #[cfg(unix)]
-    {
-        sys::unix::stop_reading_thread();
     }
 }

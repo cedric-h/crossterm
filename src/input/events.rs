@@ -6,13 +6,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, PartialOrd, PartialEq, Hash, Clone)]
 pub enum Event {
     /// A single key or a combination of keys.
-    Keyboard(KeyEvent),
+    Key(KeyEvent),
     /// A mouse event.
     Mouse(MouseEvent),
-    /// An unsupported event.
-    ///
-    /// You can ignore this type of event, because it isn't used.
-    Unsupported(Vec<u8>), // TODO Not used, should be removed.
     /// An unknown event.
     Unknown,
 }
@@ -124,7 +120,7 @@ pub enum KeyEvent {
 #[derive(Debug, PartialOrd, PartialEq, Hash, Clone)]
 pub enum InternalEvent {
     /// An input event.
-    Input(Event),
-    /// A cursor position (`x`, `y`).
+    Event(Event),
+    /// A cursor position (`col`, `row`).
     CursorPosition(u16, u16),
 }
