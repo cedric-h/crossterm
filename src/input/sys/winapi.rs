@@ -73,7 +73,7 @@ pub(crate) fn handle_key_event(key_event: KeyEventRecord) -> Result<Option<Event
         }
     }
 
-    return Ok(None);
+    Ok(None)
 }
 
 fn parse_key_event_record(key_event: &KeyEventRecord) -> Option<KeyEvent> {
@@ -91,7 +91,7 @@ fn parse_key_event_record(key_event: &KeyEventRecord) -> Option<KeyEvent> {
             let ctrl_pressed = key_state.has_state(RIGHT_CTRL_PRESSED | LEFT_CTRL_PRESSED);
             let shift_pressed = key_state.has_state(SHIFT_PRESSED);
 
-            let event = match key_code {
+            match key_code {
                 VK_LEFT => {
                     if ctrl_pressed {
                         Some(KeyEvent::CtrlLeft)
@@ -129,9 +129,7 @@ fn parse_key_event_record(key_event: &KeyEventRecord) -> Option<KeyEvent> {
                     }
                 }
                 _ => None,
-            };
-
-            event
+            }
         }
         VK_PRIOR | VK_NEXT => {
             if key_code == VK_PRIOR {

@@ -35,11 +35,12 @@
 
 use std::time::Duration;
 
+use crate::{Command, Result};
+
 pub use self::{
     events::{Event, KeyEvent, MouseButton, MouseEvent},
     source::{fake::FakeEventSource, EventSource},
 };
-use crate::{Command, Result};
 
 mod ansi;
 mod sys;
