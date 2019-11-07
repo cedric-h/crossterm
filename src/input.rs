@@ -23,7 +23,7 @@ use crate::{Command, Result};
 
 mod ansi;
 mod poll;
-mod poll_timeout;
+mod timeout;
 mod reader;
 mod source;
 mod sys;

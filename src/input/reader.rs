@@ -5,7 +5,7 @@ use super::source::tty::TtyInternalEventSource;
 #[cfg(windows)]
 use super::source::winapi::WinApiEventSource;
 use super::{
-    poll::EventPoll, poll_internal, poll_timeout::PollTimeout, read_internal, source::EventSource,
+    poll::EventPoll, poll_internal, timeout::PollTimeout, read_internal, source::EventSource,
     Event, InternalEvent, Result,
 };
 
@@ -98,7 +98,7 @@ impl EventPoll for EventReader {
         let mut timer = PollTimeout::new(timeout);
 
         loop {
-            if poll_internal(timer.left_over())? {
+            if poll_internal(timer.leftover())? {
                 match read_internal() {
                     Ok(InternalEvent::Event(ev)) => {
                         self.events.push_back(ev);

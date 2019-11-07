@@ -25,7 +25,7 @@ impl PollTimeout {
     }
 
     /// Returns the timeout leftover (initial timeout duration - elapsed duration).
-    pub fn left_over(&self) -> Option<Duration> {
+    pub fn leftover(&self) -> Option<Duration> {
         self.timeout.map(|timeout| {
             let elapsed = self.start.elapsed();
 
@@ -42,23 +42,23 @@ impl PollTimeout {
 mod tests {
     use std::{thread, time::Duration};
 
-    use crate::input::poll_timeout::PollTimeout;
+    use crate::input::timeout::PollTimeout;
 
     #[test]
-    pub fn test_timer_without_duration_should_have_no_left_over() {
+    pub fn test_timer_without_duration_should_have_no_leftover() {
         let timer = PollTimeout::new(None);
-        assert_eq!(timer.left_over(), None)
+        assert_eq!(timer.leftover(), None)
     }
 
     #[test]
-    pub fn test_timer_with_duration_should_have_left_over() {
+    pub fn test_timer_with_duration_should_have_leftover() {
         let timeout = Duration::from_millis(200);
 
         let timer = PollTimeout::new(Some(timeout.clone()));
 
         sleep_thread_millis(50);
 
-        let left_over = timer.left_over().unwrap();
+        let left_over = timer.leftover().unwrap();
 
         // should be - ~1ms ~150ms, however we can't be sure with the CI because `thread::sleep` might be off by some millis.
         assert!(
@@ -74,7 +74,7 @@ mod tests {
         sleep_thread_millis(5);
 
         assert_eq!(timer.elapsed(), true);
-        assert_eq!(timer.left_over(), Some(Duration::from_millis(0)));
+        assert_eq!(timer.leftover(), Some(Duration::from_millis(0)));
     }
 
     fn sleep_thread_millis(duration: u64) {

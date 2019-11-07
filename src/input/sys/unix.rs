@@ -100,7 +100,7 @@ fn could_not_parse_event_error() -> ErrorKind {
     ))
 }
 
-pub fn parse_event(buffer: &[u8], input_available: bool) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_event(buffer: &[u8], input_available: bool) -> Result<Option<InternalEvent>> {
     if buffer.is_empty() {
         return Ok(None);
     }
@@ -159,7 +159,7 @@ pub fn parse_event(buffer: &[u8], input_available: bool) -> Result<Option<Intern
     }
 }
 
-pub fn parse_csi(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     assert!(buffer.starts_with(&[b'\x1B', b'['])); // ESC [
 
     if buffer.len() == 2 {
@@ -214,7 +214,7 @@ pub fn parse_csi(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     Ok(input_event.map(InternalEvent::Event))
 }
 
-pub fn next_parsed<T>(iter: &mut dyn Iterator<Item = &str>) -> Result<T>
+pub(crate) fn next_parsed<T>(iter: &mut dyn Iterator<Item = &str>) -> Result<T>
 where
     T: std::str::FromStr,
 {
@@ -224,7 +224,7 @@ where
         .map_err(|_| could_not_parse_event_error())
 }
 
-pub fn parse_csi_cursor_position(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_cursor_position(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     // ESC [ Cy ; Cx R
     //   Cy - cursor row number (starting from 1)
     //   Cx - cursor column number (starting from 1)
@@ -242,7 +242,7 @@ pub fn parse_csi_cursor_position(buffer: &[u8]) -> Result<Option<InternalEvent>>
     Ok(Some(InternalEvent::CursorPosition(x, y)))
 }
 
-pub fn parse_csi_modifier_key_code(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_modifier_key_code(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     assert!(buffer.starts_with(&[b'\x1B', b'['])); // ESC [
 
     let modifier = buffer[buffer.len() - 2];
@@ -263,7 +263,7 @@ pub fn parse_csi_modifier_key_code(buffer: &[u8]) -> Result<Option<InternalEvent
     Ok(Some(InternalEvent::Event(input_event)))
 }
 
-pub fn parse_csi_special_key_code(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_special_key_code(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     assert!(buffer.starts_with(&[b'\x1B', b'['])); // ESC [
     assert!(buffer.ends_with(&[b'~']));
 
@@ -295,7 +295,7 @@ pub fn parse_csi_special_key_code(buffer: &[u8]) -> Result<Option<InternalEvent>
     Ok(Some(InternalEvent::Event(input_event)))
 }
 
-pub fn parse_csi_rxvt_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_rxvt_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     // rxvt mouse encoding:
     // ESC [ Cb ; Cx ; Cy ; M
 
@@ -323,7 +323,7 @@ pub fn parse_csi_rxvt_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     Ok(Some(InternalEvent::Event(Event::Mouse(mouse_input_event))))
 }
 
-pub fn parse_csi_x10_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_x10_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     // X10 emulation mouse encoding: ESC [ M CB Cx Cy (6 characters only).
     // NOTE (@imdaveho): cannot find documentation on this
 
@@ -363,7 +363,7 @@ pub fn parse_csi_x10_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     Ok(Some(InternalEvent::Event(Event::Mouse(mouse_input_event))))
 }
 
-pub fn parse_csi_xterm_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
+pub(crate) fn parse_csi_xterm_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     // ESC [ < Cb ; Cx ; Cy (;) (M or m)
 
     assert!(buffer.starts_with(&[b'\x1B', b'[', b'<'])); // ESC [ <
@@ -410,7 +410,7 @@ pub fn parse_csi_xterm_mouse(buffer: &[u8]) -> Result<Option<InternalEvent>> {
     Ok(Some(InternalEvent::Event(input_event)))
 }
 
-pub fn parse_utf8_char(buffer: &[u8]) -> Result<Option<char>> {
+pub(crate) fn parse_utf8_char(buffer: &[u8]) -> Result<Option<char>> {
     match std::str::from_utf8(buffer) {
         Ok(s) => {
             let ch = s.chars().next().ok_or_else(could_not_parse_event_error)?;
