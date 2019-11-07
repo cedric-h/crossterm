@@ -4,18 +4,18 @@ use std::{
 };
 
 use crate::{
-    input::{events::InternalEvent, source::EventSource},
+    input::{source::EventSource, InternalEvent},
     Result,
 };
 
 /// This event source can be used for test purposes. And gives you direct control over the events read by crossterm.
-pub struct FakeEventSource {
+pub(crate) struct FakeEventSource {
     input_receiver: Mutex<Receiver<InternalEvent>>,
 }
 
 impl FakeEventSource {
     /// Constructs a new `FakeEventSource` with the given `Receiver`, use the sender to trigger the event reader..
-    pub fn new(input_receiver: Receiver<InternalEvent>) -> FakeEventSource {
+    pub(crate) fn new(input_receiver: Receiver<InternalEvent>) -> FakeEventSource {
         FakeEventSource {
             input_receiver: Mutex::new(input_receiver),
         }

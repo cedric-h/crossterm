@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use super::events::InternalEvent;
+use super::InternalEvent;
 
 #[cfg(test)]
 pub mod fake;
@@ -10,7 +10,7 @@ pub mod tty;
 pub mod winapi;
 
 /// An interface for trying to read an `InternalEvent` within an optional `Duration`.
-pub trait EventSource: Sync + Send {
+pub(crate) trait EventSource: Sync + Send {
     /// Tries to read an `InternalEvent` within the given duration.
     ///
     /// This function takes in an optional duration.

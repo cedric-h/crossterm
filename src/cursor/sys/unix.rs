@@ -38,8 +38,6 @@ fn read_position_raw() -> Result<(u16, u16)> {
     stdout.write_all(b"\x1B[6n")?;
     stdout.flush()?;
 
-    // acquire mutable lock until we read the position, so that the user can't steal it from us.
-
     loop {
         match poll_internal(Some(Duration::from_millis(2000))) {
             Ok(true) => {

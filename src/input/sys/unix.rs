@@ -10,7 +10,7 @@ use crate::{
     ErrorKind, Result,
 };
 
-use super::super::events::InternalEvent;
+use super::super::InternalEvent;
 
 /// A file descriptor wrapper.
 ///

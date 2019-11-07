@@ -1,15 +1,15 @@
 use std::{collections::vec_deque::VecDeque, time::Duration};
 
 #[cfg(unix)]
-use crate::input::source::tty::TtyInternalEventSource;
+use super::source::tty::TtyInternalEventSource;
 #[cfg(windows)]
-use crate::input::source::winapi::WinApiEventSource;
-use crate::{
-    input::{
-        events::InternalEvent, poll::EventPoll, poll_internal, poll_timeout::PollTimeout,
-        read_internal, source::EventSource, Event,
-    },
+use super::source::winapi::WinApiEventSource;
+use super::{
     Result,
+    {
+        poll::EventPoll, poll_internal, poll_timeout::PollTimeout, read_internal,
+        source::EventSource, Event, InternalEvent,
+    },
 };
 
 /// Can be used to read `InternalEvent`s.
